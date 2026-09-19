@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>HAM AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fa;
+      color: #111827;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+    }
+
+    header p {
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 35px auto;
+      padding: 20px;
+    }
+
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    }
+
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 17px;
+      resize: vertical;
+      direction: rtl;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 14px 25px;
+      border: none;
+      border-radius: 10px;
+      background: #0878d1;
+      color: white;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0562ad;
+    }
+
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    #preview {
+      width: 100%;
+      height: 600px;
+      margin-top: 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>🤖HAM AI </h1>
+    <p>كتب فكرة التطبيق والـ AI غادي يصايبو ليك</p>
+  </header>
+
+  <div class="container">
+
+    <div class="box">
+
+      <h2>شنو بغيتي تصايب؟</h2>
+
+      <textarea
+        id="prompt"
+        placeholder="مثال: بغيت آلة حاسبة عصرية فيها الجمع والطرح والضرب والقسمة">
+      </textarea>
+
+      <button onclick="generateApp()">
+        🚀 صايب التطبيق
+      </button>
+
+      <div id="status">
+        هنا غادي تبان حالة التطبيق...
+      </div>
+
+      <iframe
+        id="preview"
+        title="AI Generated App">
+      </iframe>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    async function generateApp() {
+
+      const prompt = document.getElementById("prompt").value.trim();
+      const status = document.getElementById("status");
+      const preview = document.getElementById("preview");
+
+      if (!prompt) {
+        status.innerHTML = "⚠️ كتب ليا فكرة التطبيق الأول.";
+        return;
+      }
+
+      status.innerHTML = "⏳ الـ AI كيبني التطبيق ديالك...";
+
+      preview.srcdoc = "";
+
+      try {
+
+        const response = await fetch("/generate", {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            prompt: prompt
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "حدث خطأ");
+        }
+
+        let html = data.message;
+
+        // إزالة markdown إذا رجع AI الكود داخل ```html
+        html = html
+          .replace(/^```html\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+
+        preview.srcdoc = html;
+
+        status.innerHTML = "✅ التطبيق تصايب!";
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.innerHTML =
+          "❌ وقع مشكل: " + error.message;
+      }
+    }
+
+  </script>
+function downloadApp() {
+  const html = document.getElementById("preview").srcdoc.trim();
+
+  if (!html) {
+    document.getElementById("status").innerHTML =
+      "⚠️ صايب التطبيق الأول.";
+    return;
+  }
+
+  const blob = new Blob([html], {
+    type: "text/html;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "my-ai-website.html";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
+</body>
+</html>
